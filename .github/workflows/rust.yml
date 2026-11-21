@@ -17,6 +17,7 @@ jobs:
       - name: Unpack Rust sources
         working-directory: .
         run: |
+          rm -rf rust
           mkdir -p rust
           base64 -d rust-src.b64 | tar xz -C rust
 
@@ -43,17 +44,17 @@ jobs:
           pip install pillow
           python3 tools/gen_icons.py
 
-      - name: Build Saját Jegyzet
-        run: cargo apk build -p jegyzet --lib --features droid
+      - name: Build CraftNotes
+        run: cargo apk build -p craftnotes --lib --features droid
 
-      - name: Build Saját Hangrögzítő
-        run: cargo apk build -p hangrogzito --lib --features droid
+      - name: Build CraftRecorder
+        run: cargo apk build -p craftrecorder --lib --features droid
 
       - uses: actions/upload-artifact@v4
         with:
-          name: SajatJegyzet-apk
-          path: rust/target/debug/apk/SajatJegyzet.apk
+          name: CraftNotes-apk
+          path: rust/target/debug/apk/CraftNotes.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: SajatHangrogzito-apk
-          path: rust/target/debug/apk/SajatHangrogzito.apk
+          name: CraftRecorder-apk
+          path: rust/target/debug/apk/CraftRecorder.apk
