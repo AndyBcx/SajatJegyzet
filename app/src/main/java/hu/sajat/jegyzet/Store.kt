@@ -10,7 +10,7 @@ import java.util.zip.ZipOutputStream
 
 data class Note(val id: String, val title: String, val body: String, val modified: Long)
 
-/** Minden adat sima fájl: jegyzetek = notes/<id>.md, felvételek = recordings/*.m4a */
+// Minden adat sima fájl: jegyzetek = notes/<id>.md, felvételek = recordings mappa (.m4a)
 class Store(private val ctx: Context) {
     /**
      * Ha az app megkapta a „Minden fájl elérése" jogot, az adatok a közös
@@ -100,7 +100,7 @@ class Store(private val ctx: Context) {
         saveNote(null, text)
     }
 
-    /** Mindent egy ZIP-be ír: notes/*.md és recordings/*.m4a */
+    // Mindent egy ZIP-be ír: a notes és a recordings mappa tartalmát
     fun exportZip(out: OutputStream) {
         ZipOutputStream(out.buffered()).use { zip ->
             for ((prefix, dir) in listOf("notes" to notesDir, "recordings" to recDir)) {
