@@ -1,6 +1,7 @@
 package hu.sajat.jegyzet
 
 import android.content.Context
+import android.os.Environment
 import java.io.File
 import java.io.OutputStream
 import java.util.UUID
@@ -10,9 +11,31 @@ import java.util.zip.ZipOutputStream
 data class Note(val id: String, val title: String, val body: String, val modified: Long)
 
 /** Minden adat sima fájl: jegyzetek = notes/<id>.md, felvételek = recordings/*.m4a */
-class Store(ctx: Context) {
-    val notesDir = File(ctx.filesDir, "notes").apply { mkdirs() }
-    val recDir = File(ctx.filesDir, "recordings").apply { mkdirs() }
+class Store(private val ctx: Context) {
+    /**
+     * Ha az app megkapta a „Minden fájl elérése" jogot, az adatok a közös
+     * /storage/emulated/0/SajatJegyzet mappába kerülnek (ezt szinkronizálja a Syncthing).
+     * Egyébként az app belső tárolójában vannak.
+     */
+    val sharedAccess: Boolean get() = Environment.isExternalStorageManager()
+    val rootDir: File
+        get() = if (sharedAccess) File(Environment.getExternalStorageDirectory(), "SajatJegyzet") else ctx.filesDir
+    val notesDir: File get() = File(rootDir, "notes").apply { mkdirs() }
+    val recDir: File get() = File(rootDir, "recordings").apply { mkdirs() }
+
+    /** Jog megadása után átmásolja a belső tárolóban lévő adatokat a közös mappába. */
+    fun migrate() {
+        if (!sharedAccess) return
+        for ((name, dest) in listOf("notes" to notesDir, "recordings" to recDir)) {
+            File(ctx.filesDir, name).listFiles().orEmpty().filter { it.isFile }.forEach { f ->
+                val t = File(dest, f.name)
+                if (!t.exists()) f.copyTo(t)
+                t.setLastModified(f.lastModified())
+                f.delete()
+            }
+        }
+    }
+
     private val prefs = ctx.getSharedPreferences("settings", Context.MODE_PRIVATE)
 
     fun notes(): List<Note> =
