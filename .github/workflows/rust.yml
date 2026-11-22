@@ -2,7 +2,7 @@ name: Build Rust APKs
 on:
   push:
     branches: [main]
-    paths: ["rust-src.b64", ".github/workflows/rust.yml"]
+    paths: ["rust-src.b64", "recorder-src.b64", ".github/workflows/rust.yml"]
   workflow_dispatch:
 
 jobs:
@@ -20,6 +20,12 @@ jobs:
           rm -rf rust
           mkdir -p rust
           base64 -d rust-src.b64 | tar xz -C rust
+
+      - name: Replace CraftRecorder with the new simplified version
+        working-directory: .
+        run: |
+          rm -rf rust/craftrecorder
+          base64 -d recorder-src.b64 | tar xz -C rust
 
       - uses: actions/setup-java@v4
         with:
