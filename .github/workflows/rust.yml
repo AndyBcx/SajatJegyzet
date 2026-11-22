@@ -45,7 +45,9 @@ jobs:
           python3 tools/gen_icons.py
 
       - name: Prepare patched Slint Android backend (pen pressure and buttons)
-        run: python3 tools/prep_backend.py
+        run: |
+          sed -i 's/^use android_activity::input/use crate::android_activity::input/' tools/pen_patch.rs
+          python3 tools/prep_backend.py
 
       - name: Build CraftNotes
         run: cargo apk build -p craftnotes --lib --features droid
