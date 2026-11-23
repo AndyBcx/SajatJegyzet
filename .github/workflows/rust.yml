@@ -5,6 +5,10 @@ on:
     paths: ["rust-src.b64", "recorder-src.b64", ".github/workflows/rust.yml"]
   workflow_dispatch:
 
+permissions:
+  actions: write
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -75,7 +79,20 @@ jobs:
         with:
           name: CraftNotes-apk
           path: rust/target/debug/apk/CraftNotes.apk
+          retention-days: 90
+
       - uses: actions/upload-artifact@v4
         with:
           name: CraftRecorder-apk
           path: rust/target/debug/apk/CraftRecorder.apk
+          retention-days: 90
+
+      - name: Keep only the latest CraftNotes and CraftRecorder APKs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --paginate "/repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" \
+            --jq '.artifacts[] | select((.name == "CraftNotes-apk" or .name == "CraftRecorder-apk") and ((.workflow_run.id | tostring) != env.GITHUB_RUN_ID)) | .id' |
+          while IFS= read -r artifact_id; do
+            [ -z "$artifact_id" ] || gh api --method DELETE "/repos/$GITHUB_REPOSITORY/actions/artifacts/$artifact_id"
+          done
